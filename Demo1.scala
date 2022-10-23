@@ -3,12 +3,14 @@ package Demo
 import scala.collection.mutable.ListBuffer
 import scala.io.{Source, StdIn}
 
+
+//Le but de l'objet Demo1 est de lire le fichier de test et d'exécuter le programme principal.
 object Demo1 {
 
   def main(args: Array[String]): Unit = {
-    // 读取文件
+    // lire le fichier de test
     val source = Source.fromFile("src/main/resources/test/test.txt", "utf-8")
-    // 以行位单位读取
+    // lire en lignes
     val lines: Iterator[String] = source.getLines()
 
     val list: List[String] = lines.toList
@@ -17,86 +19,89 @@ object Demo1 {
     game.start()
 
     source.close()
+    //La lecture termine et le tube IO est fermé.
   }
 
 }
 
+
+//La classe Game spécifie la logique globale du fonctionnement du jeu.
 class Game(list: List[String]) {
-  // 地图对象
+  // objet carte
   private var gm: GameMap = _
-  private var isContinue = true // 判断游戏是否需要继续
-  private var cnt = 0 // 记录割草机的数量
+  private var isContinue = true // Déterminer si le jeu doit continuer.
+  private var cnt = 0 // Noter le nombre de tondeuses
   private val resultList = ListBuffer[String]()
 
-
   def start() = {
-    // 初始化地图
+    //appeler la fonction initMap et initialiser l'objet carte.
     this.initMap()
     var i = 0
 
     while (isContinue) {
       cnt += 1
-      var inputFlag = true // 判断输入的格式是否正确
+      var inputFlag = true // Vérifier si le format d'entrée est correct.
       var arr: Array[String] = null
       while (inputFlag) {
-        // 获取第一条 因为第一条是指定方位
+        // Diviser la ligne de commande par des espaces et placer-les dans un tableau.
         arr = list(i).split("\\s+")
-        // 判断是否是三个参数
+
+        // Déterminer s'il s'agit de trois lettres.
         if (arr.length == 3) {
           inputFlag = false
         }
         i += 1
       }
 
-      // 实例化一台割草机
+      // Instancier une tondeuse
       val mower = new Mower(gm, arr(0).toInt, arr(1).toInt, arr(2))
 
-
-      // 接收指令
+      //Recevoir des instructions
       val options: Array[Char] = list(i).toCharArray
-      // 执行指令
+      //Exécuter l'instruction
       this.computeOptions(mower, options)
 
-      // 将当前位置保存
-      resultList.append(s"割草机 ${cnt}: ${mower.x} ${mower.y} ${mower.to}")
+      //Enregistrer la position actuelle de la tondeuse.
+      resultList.append(s"Tondeuse ${cnt}: ${mower.x} ${mower.y} ${mower.to}")
 
-      // 割草机运行完毕
+      //Déménagement tondeuse terminé.
       if (i == list.length - 1) {
         isContinue = false
         this.printResult()
       }
 
 
-    }
+    }  //while is done.
 
-  }
+  }   // start is done.
 
-  // 打印最终结果
+  // afficher le résultat final.
   def printResult() = {
     resultList.foreach(println)
   }
 
-  // 割草机执行指令
+  // La tondeuse exécute les instructions
   def computeOptions(mower: Mower, options: Array[Char]) = {
     options.foreach(op => mower.setOption(op.toString))
-
 
   }
 
   def initMap() = {
-    // 初始化地图
+    // Initialiser l'objet cartographique，l'abscisse et l'ordonnée de la tondeuse ne doivent pas dépasser 9
     gm = new GameMap(10, 10)
   }
 
 }
 
-// 地图
+// classe de carte
 class GameMap(Xlen: Int, Ylen: Int) {
 
   val map = Array.ofDim[Int](Xlen, Ylen)
 
 }
 
+
+//classe de Mower. Il est responsable du mouvement et de la direction de la tondeuse.
 class Mower(gameMap: GameMap, var x: Int, var y: Int, var to: String) {
 
   private val point: Array[String] = Array("W", "N", "E", "S")
@@ -107,31 +112,31 @@ class Mower(gameMap: GameMap, var x: Int, var y: Int, var to: String) {
     case "G" => this.changeTo("G")
   }
 
-  // 移动
+  // Mouvement
   def move(): Unit = {
 
     to match {
       case "W" => {
-        // 西移动 x-1
+        // déplacer vers l'ouest x-1
         if (x - 1 >= 0) {
           x -= 1
         }
 
       }
       case "N" => {
-        // 北移动 y+1
+        // déplacer vers le nord y+1
         if (y + 1 < gameMap.map.length) {
           y += 1
         }
       }
       case "E" => {
-        // 东移动 x+1
+        // déplacer vers l'est x+1
         if (x + 1 < gameMap.map(x).length) {
           x += 1
         }
       }
       case "S" => {
-        // 南移动 y-1
+        // déplacer vers le sud y-1
         if (y - 1 != 0) {
           y -= 1
         }
@@ -141,13 +146,13 @@ class Mower(gameMap: GameMap, var x: Int, var y: Int, var to: String) {
 
   }
 
-  // 改变方向
+  // Changer la direction de la tondeuse
   def changeTo(op: String): Unit = {
 
     if (op.eq("D")) {
-      // 得到当前面向位置的下标
+      // Obtenir l'index de la position actuelle
       val i = point.indexOf(to)
-      // 下标+1
+      // l'index de la position+1
       to = point(((i + 1) % point.length))
     } else {
       var i = point.indexOf(to)
